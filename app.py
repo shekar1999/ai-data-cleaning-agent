@@ -21,5 +21,26 @@ if uploaded_file is not None:
         st.write(f"Rows: {df.shape[0]}")
         st.write(f"Columns: {df.shape[1]}")
 
+        st.subheader("Column Names")
+        st.write(list(df.columns))
+
+        st.subheader("Data Types")
+        dtype_df = pd.DataFrame({
+            "Column": df.columns,
+            "Data Type": df.dtypes.astype(str).values
+        })
+        st.dataframe(dtype_df)
+
+        st.subheader("Missing Values Per Column")
+        missing_df = pd.DataFrame({
+            "Column": df.columns,
+            "Missing Values": df.isnull().sum().values
+        })
+        st.dataframe(missing_df)
+
+        st.subheader("Duplicate Rows")
+        duplicate_count = df.duplicated().sum()
+        st.write(f"Duplicate rows: {duplicate_count}")
+
     except Exception as e:
         st.error(f"Error reading file: {e}")
