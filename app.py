@@ -42,5 +42,54 @@ if uploaded_file is not None:
         duplicate_count = df.duplicated().sum()
         st.write(f"Duplicate rows: {duplicate_count}")
 
+        st.subheader("Cleaning Options")
+
+        if st.button("Clean Dataset"):
+            cleaned_df = df.copy()
+
+            original_rows = cleaned_df.shape[0]
+            original_missing = cleaned_df.isnull().sum().sum()
+
+            # Fill missing values
+            for col in cleaned_df.columns:
+                if pd.api.types.is_numeric_dtype(cleaned_df[col]):
+                    cleaned_df[col] = cleaned_df[col].fillna(cleaned_df[col].median())
+                else:
+                    if cleaned_df[col].mode().empty:
+                        cleaned_df[col] = cleaned_df[col].fillna("Unknown")
+                    else:
+                        cleaned_df[col] = cleaned_df[col].fillna(cleaned_df[col].mode()[0])
+
+            # Remove duplicates
+            cleaned_df = cleaned_df.drop_duplicates()
+
+            cleaned_rows = cleaned_df.shape[0]
+            cleaned_missing = cleaned_df.isnull().sum().sum()
+            removed_duplicates = original_rows - cleaned_rows
+
+            st.success("Dataset cleaned successfully.")
+
+            st.subheader("Cleaning Summary")
+            st.write(f"Original total missing values: {original_missing}")
+            st.write(f"Remaining missing values: {cleaned_missing}")
+            st.write(f"Duplicate rows removed: {removed_duplicates}")
+            st.write(f"Final row count: {cleaned_rows}")
+
+            st.subheader("Cleaned Dataset Preview")
+            st.dataframe(cleaned_df.head(20))  # show first 20 rows as preview
+
+            st.subheader("Full Cleaned Dataset")
+            st.dataframe(cleaned_df)  # shows entire cleaned dataframe in Streamlit table
+
+            # Convert full cleaned dataset to CSV for download
+            csv = cleaned_df.to_csv(index=False).encode("utf-8")
+
+            st.download_button(
+                label="Download Full Cleaned Dataset",
+                data=csv,
+                file_name="cleaned_dataset.csv",
+                mime="text/csv"
+            )
+
     except Exception as e:
         st.error(f"Error reading file: {e}")
