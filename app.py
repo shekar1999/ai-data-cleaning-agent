@@ -30,8 +30,7 @@ remove_duplicates = st.sidebar.checkbox("Remove exact duplicate rows during clea
 
 uploaded_file = st.file_uploader(
     "Upload your data file",
-    type=["csv", "xlsx", "txt", "tsv", "json", "data"],
-    max_upload_size=500
+    type=["csv", "xlsx", "txt", "tsv", "json", "data"]
 )
 
 # -------------------------------
@@ -234,6 +233,10 @@ def detect_anomalies(df):
     if numeric_df.shape[1] == 0 or numeric_df.shape[0] < 5:
         return None, None
 
+    numeric_df = numeric_df.dropna(axis=1, how="all")
+    if numeric_df.shape[1] == 0:
+        return None, None
+        
     numeric_df = numeric_df.fillna(numeric_df.median())
 
     model = IsolationForest(contamination=0.05, random_state=42)
@@ -321,11 +324,15 @@ if uploaded_file is not None:
             if numeric_cols:
                 selected_col = st.selectbox("Select a numeric column for histogram", numeric_cols)
                 fig, ax = plt.subplots(figsize=(8, 4))
-                ax.hist(df[selected_col].dropna(), bins=20)
-                ax.set_title(f"Distribution of {selected_col}")
-                ax.set_xlabel(selected_col)
-                ax.set_ylabel("Frequency")
-                st.pyplot(fig)
+                valid_data = df[selected_col].dropna()
+                if valid_data.empty:
+                    st.warning("No valid data to plot in this column.")
+                else:
+                    ax.hist(valid_data, bins=20)
+                    ax.set_title(f"Distribution of {selected_col}")
+                    ax.set_xlabel(selected_col)
+                    ax.set_ylabel("Frequency")
+                    st.pyplot(fig)
 
                 if len(numeric_cols) >= 2:
                     st.subheader("Correlation Heatmap")
